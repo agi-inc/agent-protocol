@@ -1,0 +1,21 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="CommandLineParser" Version="2.9.1"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0"/>
+        <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.0.3"/>
+        <PackageVersion Include="NSwag.Core" Version="14.0.3"/>
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageVersion Include="xunit" Version="2.6.1"/>
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3"/>
+        <PackageVersion Include="Moq" Version="4.20.69"/>
+        <PackageVersion Include="FluentAssertions" Version="6.12.0"/>
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageVersion Include="Spectre.Console" Version="0.48.0" />
+    </ItemGroup>
+</Project>
