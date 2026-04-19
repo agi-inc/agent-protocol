@@ -4,6 +4,7 @@ import { Button } from '@/components/Button'
 import { Heading } from '@/components/Heading'
 import logoJS from '@/images/logos/js.svg'
 import logoPython from '@/images/logos/python.svg'
+import logoCSharp from '@/images/logos/dotnet.svg'
 
 const libraries = [
   {
@@ -17,6 +18,12 @@ const libraries = [
     name: 'JavaScript & TypeScript',
     description: '',
     logo: logoJS,
+  },
+  {
+    href: '/sdks/C#',
+    name: '.NET',
+    description: '',
+    logo: logoCSharp,
   },
 ]
 

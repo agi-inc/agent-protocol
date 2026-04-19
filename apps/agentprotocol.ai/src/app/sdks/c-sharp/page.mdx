@@ -1,0 +1,248 @@
+export const metadata = {
+    title: 'C# Agent Protocol SDK',
+    description:
+        'C# SDK to help you implement agent protocol for your agent.',
+}
+
+export const sections = [
+    { title: 'Installation', id: 'installation' },
+    { title: 'Architecture', id: 'architecture' },
+    { title: 'Usage', id: 'usage' },
+    { title: 'Examples', id: 'examples' },
+]
+
+# C# Agent Protocol SDK
+
+This is our recommended way to implement agent protocol for your agent in .NET environments.
+
+You can find the source code [here](https://github.com/Div99/agent-protocol/tree/main/apps/agentprotocol.ai/src/app/sdks).
+
+## Installation
+
+```bash
+# Install from NuGet
+dotnet add package AgentProtocol
+```
+
+## Architecture
+
+The C# SDK provides a strongly-typed client for interacting with the Agent Protocol API. The core component is the `AgentClient` class which implements the `IAgentClient` interface.
+
+The SDK follows a service-oriented design with clear separation of concerns:
+
+- **AgentClient**: Handles HTTP communication with Agent Protocol-compatible APIs
+- **Response Models**: Strongly-typed models for all API responses
+- **Request Models**: Classes for structuring request data
+
+### Core Components
+
+The SDK is built around several key interfaces and classes:
+
+- `IAgentClient`: The primary interface for interacting with the Agent Protocol API
+- `Body`: Request models for creating tasks and executing steps
+- `Response` types: Strongly-typed responses for different API operations
+- `FileParameter`: Manages file handling for artifact uploads
+- `FileResponse`: Handles artifact downloads
+
+All operations are asynchronous, leveraging .NET's Task-based Asynchronous Pattern (TAP) for optimal performance.
+
+## Usage
+
+Here's a typical workflow for using the C# SDK:
+
+1. **Create an ApiClient instance**
+2. **Create a task**
+3. **Execute steps**
+4. **Upload and download artifacts**
+
+### Creating an AgentClient
+
+```csharp
+// Create an HttpClient with proper configuration
+var httpClient = new HttpClient
+{
+    BaseAddress = new Uri("https://your-agent-api.com")
+};
+httpClient.DefaultRequestHeaders.Authorization = 
+    new AuthenticationHeaderValue("Bearer", "your-api-key");
+
+// Create the AgentClient
+var agentClient = new AgentClient(httpClient);
+```
+
+### Creating a Task
+
+```csharp
+// Create a task with input
+var taskInput = new Body
+{
+    Input = "Write a poem about artificial intelligence",
+    Additional_input = new { temperature = 0.7 }
+};
+
+var taskResponse = await agentClient.CreateAgentTaskAsync(taskInput);
+string taskId = taskResponse.Task_id;
+```
+
+### Executing Steps
+
+```csharp
+// Get steps for the task
+var stepsResponse = await agentClient.ListAgentTaskStepsAsync(taskId);
+
+// Execute the next step
+var stepInput = new Body2
+{
+    Input = "Add more details about consciousness",
+    Additional_input = new { depth = "philosophical" }
+};
+
+var stepResponse = await agentClient.ExecuteAgentTaskStepAsync(taskId, stepInput);
+
+// Get details about a specific step
+var stepId = stepResponse.Step_id;
+var stepDetails = await agentClient.GetAgentTaskStepAsync(taskId, stepId);
+```
+
+### Working with Artifacts
+
+```csharp
+// Upload an artifact
+var filePath = "poem.txt";
+var fileContent = File.ReadAllBytes(filePath);
+var fileParameter = new FileParameter(
+    new MemoryStream(fileContent),
+    "poem.txt",
+    "text/plain"
+);
+
+var artifactResponse = await agentClient.UploadAgentTaskArtifactsAsync(
+    taskId, 
+    fileParameter, 
+    "outputs/poem.txt"
+);
+
+// List artifacts
+var artifactsResponse = await agentClient.ListAgentTaskArtifactsAsync(taskId);
+
+// Download an artifact
+var artifactId = artifactsResponse.Artifacts[0].Artifact_id;
+var fileResponse = await agentClient.DownloadAgentTaskArtifactAsync(taskId, artifactId);
+
+// Save the downloaded file
+using (var fileStream = File.Create("downloaded_poem.txt"))
+{
+    await fileResponse.Stream.CopyToAsync(fileStream);
+}
+```
+
+## Advanced Usage with Service Layer
+
+For larger applications, we recommend creating a service layer on top of the AgentClient:
+
+```csharp
+public class AgentTaskService
+{
+    private readonly IAgentClient _agentClient;
+    private readonly ILogger<AgentTaskService> _logger;
+
+    public AgentTaskService(IAgentClient agentClient, ILogger<AgentTaskService> logger)
+    {
+        _agentClient = agentClient;
+        _logger = logger;
+    }
+
+    public async Task<string> CreateTaskAsync(string input, object additionalInput = null)
+    {
+        try
+        {
+            var body = new Body { Input = input };
+            if (additionalInput != null)
+            {
+                body.Additional_input = additionalInput;
+            }
+
+            var response = await _agentClient.CreateAgentTaskAsync(body);
+            return response.Task_id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating task");
+            throw;
+        }
+    }
+
+    // Additional methods for steps, artifacts, etc.
+}
+```
+
+## Examples
+
+Here's a more complete example demonstrating a console application that uses the SDK:
+
+```csharp
+using System;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using AnotherAgentProtocolLibrary;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        // Configure services
+        var services = new ServiceCollection();
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Configure HttpClient for AgentClient
+        services.AddHttpClient<IAgentClient, AgentClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://your-agent-api.com");
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", "your-api-key");
+        });
+        
+        // Build service provider
+        var serviceProvider = services.BuildServiceProvider();
+        var agentClient = serviceProvider.GetRequiredService<IAgentClient>();
+        
+        try
+        {
+            // Create a task
+            Console.WriteLine("Creating a task...");
+            var taskResponse = await agentClient.CreateAgentTaskAsync(new Body 
+            { 
+                Input = "Create a 5-year business plan for an AI startup"
+            });
+            
+            Console.WriteLine($"Task created with ID: {taskResponse.Task_id}");
+            
+            // Execute step
+            var stepResponse = await agentClient.ExecuteAgentTaskStepAsync(
+                taskResponse.Task_id, 
+                new Body2 { Input = "Focus on the financial projections section" }
+            );
+            
+            Console.WriteLine($"Step executed: {stepResponse.Output}");
+            
+            // Get task details
+            var taskDetails = await agentClient.GetAgentTaskAsync(taskResponse.Task_id);
+            Console.WriteLine($"Task has {taskDetails.Artifacts.Count} artifacts");
+        }
+        catch (ApiException ex)
+        {
+            Console.WriteLine($"API Error: {ex.StatusCode} - {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
+```
