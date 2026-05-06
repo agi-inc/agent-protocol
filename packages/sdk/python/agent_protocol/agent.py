@@ -62,7 +62,7 @@ async def list_agent_tasks_ids(page_size: int = 10, current_page: int = 1) -> Li
         tasks=tasks[start_index:end_index],
         pagination=Pagination(
             total_items=len(tasks),
-            total_pages=len(tasks) // page_size,
+            total_pages=(len(tasks) + page_size - 1) // page_size,
             current_page=current_page,
             page_size=page_size,
         ),
@@ -95,7 +95,7 @@ async def list_agent_task_steps(
         steps=task.steps[start_index:end_index],
         pagination=Pagination(
             total_items=len(task.steps),
-            total_pages=len(task.steps) // page_size,
+            total_pages=(len(task.steps) + page_size - 1) // page_size,
             current_page=current_page,
             page_size=page_size,
         ),
