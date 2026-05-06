@@ -131,7 +131,7 @@ class InMemoryTaskDB(TaskDB):
 
     async def get_step(self, task_id: str, step_id: str) -> Step:
         task = await self.get_task(task_id)
-        step = next(filter(lambda s: s.task_id == task_id, task.steps), None)
+        step = next(filter(lambda s: s.step_id == step_id, task.steps), None)
         if not step:
             raise NotFoundException("Step", step_id)
         return step
