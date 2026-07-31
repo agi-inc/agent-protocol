@@ -1,6 +1,7 @@
 import OpenApi from '@readme/openapi-parser'
 import yaml from 'js-yaml'
 import fs from 'fs'
+import { resolveRef } from './resolveRef.mjs'
 
 let doc = yaml.load(fs.readFileSync('../schemas/openapi.yml'))
 
@@ -21,7 +22,7 @@ function generatePathAttributes(parameters) {
     (param) => `
     <Property name="${param.name}" type="${param.schema.type}">
         ${param.description || ''}
-    </Property>`,
+    </Property>`
   )
   return `### Path attributes
 
@@ -40,7 +41,7 @@ function generateBodyAttributes(attributes) {
       attributes.properties[key].type || 'any'
     }" required="${attributes.required?.includes(key)}">
         ${attributes.properties[key].description || ''}
-    </Property>`,
+    </Property>`
   )
   return `### Body attributes
 
@@ -63,22 +64,6 @@ function generateCurlFormData(properties) {
     .join('\n')
 }
 
-function resolveRef(ref) {
-  const temp = $refs.get(ref)
-  if (!temp.properties) {
-    return temp
-  }
-  Object.keys(temp.properties).map((key) => {
-    if (temp.properties[key]['$ref']) {
-      temp.properties[key] = resolveRef(temp.properties[key]['$ref'])
-      if (!temp.properties[key]) {
-        temp.properties.pop(key)
-      }
-    }
-  })
-  return temp
-}
-
 function generateEndpoint(endpoint, raw_method, raw_path) {
   let method = raw_method.toUpperCase()
   const path = raw_path.replaceAll('{', '<').replaceAll('}', '>')
@@ -87,7 +72,7 @@ function generateEndpoint(endpoint, raw_method, raw_path) {
   if (content) {
     const contentType = Object.keys(content)[0]
     attributes = content[contentType].schema['$ref']
-      ? resolveRef(content[contentType].schema['$ref'])
+      ? resolveRef(content[contentType].schema['$ref'], $refs)
       : content[contentType].schema
   }
 
