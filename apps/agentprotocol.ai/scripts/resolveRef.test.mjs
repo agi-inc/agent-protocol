@@ -24,3 +24,25 @@ test('removes unresolved object properties while resolving references', () => {
     valid: { type: 'string' },
   })
 })
+
+test('preserves a reference when resolving a recursive schema', () => {
+  const refs = new Map([
+    [
+      '#/components/schemas/Node',
+      {
+        type: 'object',
+        properties: {
+          value: { type: 'string' },
+          next: { $ref: '#/components/schemas/Node' },
+        },
+      },
+    ],
+  ])
+
+  const resolved = resolveRef('#/components/schemas/Node', refs)
+
+  assert.deepEqual(resolved.properties, {
+    value: { type: 'string' },
+    next: { $ref: '#/components/schemas/Node' },
+  })
+})
