@@ -68,11 +68,11 @@ function resolveRef(ref) {
   if (!temp.properties) {
     return temp
   }
-  Object.keys(temp.properties).map((key) => {
+  Object.keys(temp.properties).forEach((key) => {
     if (temp.properties[key]['$ref']) {
       temp.properties[key] = resolveRef(temp.properties[key]['$ref'])
       if (!temp.properties[key]) {
-        temp.properties.pop(key)
+        delete temp.properties[key]
       }
     }
   })
